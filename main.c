@@ -11,6 +11,7 @@
 volatile uint8_t sekunde = 0;
 volatile uint8_t minute = 0;
 volatile uint8_t stunde = 0;
+volatile uint16_t ausgleichscounter = 0;
 
 void set_time(time_array[]);
 
@@ -74,10 +75,14 @@ stunde =  if(time_array[29]==true)minute+1;
 
 int main(void){
 
+  //PRESCALER 32 // Rechnung 8000000/(255*x) = 1000 , x = 31,25
+  CLKPR |= (1 << CLKPS2) | (1 << CLKPS0);
+
   //TIMER0 CTC for PWM
+  //PRESCALER 
   TCCR0B |= (1 << CS01);
-  OCR0A = 255;
-  TCCR0A |= (1 << WGM00);
+  OCR0A = 254;
+  TCCR0A |= (1 << WGM01);
   TIMSK0 |= (1 << OCIE0A);
 
   //SET DDR and PULL-UP
@@ -109,6 +114,11 @@ int main(void){
 
 ISR(TIMER0_COMPA_vect){
 
+  ausgleichscounter++;
+  if(ausgleichscounter==1000){
+  ausgleichscounter = 0;
+  sekunde--:
+  }
   sekunde++;
   if(sekunde==60){
     sekunde = 0;
