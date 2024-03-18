@@ -14,7 +14,7 @@ volatile uint8_t stunde = 0;
 
 void set_time(time_array[]);
 
-void receive_time(){
+void receive_time(volatile uint8_t minute, volatile uint8_t stunde){
 
 bool bit;
 bool receive_array[];
@@ -24,14 +24,19 @@ bool time_array[];
 
     bit = avr_receive();
     receive_array[i] = bit;
+    PORTB |= (bit << PB0);
+
     if(receive_array[i-1]==receive_array[i]{
       for(uint8_t j = 0, j < 256){
       bit = avr_receive();
       time_array[j] = bit;
+      PORTB |= (bit << PB0);
       }
     }
-set_time(time_array[]);
+
+set_time(time_array[], minute, stunde);
 }
+
 
 void set_time(bool time_array[], volatile uint8_t minute, volatile uint8_t stunde){
 
@@ -78,7 +83,7 @@ int main(void){
   //SET DDR and PULL-UP
     DDRB = 0b00000111;
     DDRC = 0b0011111;
-    DDRD = 0b11111000;
+    DDRD = 0b11111100;
 
     //WATCHDOG
     MCUSR &= ~(1 << WDRF); // Watchdog-Reset löschen
@@ -91,7 +96,11 @@ int main(void){
 
     while(1){
 
-    receive_time()
+    wdt_disable();
+    receive_time();
+    PORTC = stunde;
+    PORTD = (2 << minute);
+
 
     }
 
@@ -100,7 +109,9 @@ int main(void){
 
 ISR(TIMER0_COMPA_vect){
 
-  sekunde=0;
+  sekunde++;
+  if(sekunde==60){
+    sekunde = 0;
     minute++;
         if(minute==60){
         minute= 0;
@@ -109,6 +120,6 @@ ISR(TIMER0_COMPA_vect){
             stunde = 0;
             }
         }   
-
+  }
 
 }
